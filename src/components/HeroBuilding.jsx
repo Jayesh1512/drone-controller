@@ -3,17 +3,8 @@ import { useFrame } from '@react-three/fiber'
 import { Text3D, Center } from '@react-three/drei'
 
 function GlowingLetters() {
-  const groupRef = useRef()
-
-  useFrame(({ clock }) => {
-    if (groupRef.current) {
-      const pulse = 1 + Math.sin(clock.elapsedTime * 1.2) * 0.04
-      groupRef.current.scale.setScalar(pulse)
-    }
-  })
-
   return (
-    <group ref={groupRef} position={[0, 0.3, 0]}>
+    <group position={[0, 0.3, 0]}>
       <Center>
         <Text3D
           font="https://threejs.org/examples/fonts/helvetiker_bold.typeface.json"
