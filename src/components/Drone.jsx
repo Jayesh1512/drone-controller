@@ -5,42 +5,38 @@ import * as THREE from 'three'
 
 const DEG2RAD = Math.PI / 180
 
-// Arm positions (front-left, front-right, back-left, back-right)
 const ARM_POSITIONS = [
-  [-0.6, 0, -0.6],
-  [0.6, 0, -0.6],
-  [-0.6, 0, 0.6],
-  [0.6, 0, 0.6],
+  [-0.7, 0, -0.7],
+  [0.7, 0, -0.7],
+  [-0.7, 0, 0.7],
+  [0.7, 0, 0.7],
 ]
 
-// Propeller spin direction (alternating for counter-torque)
 const SPIN_DIRS = [1, -1, -1, 1]
 
 function Propeller({ position, spinDir }) {
   const ref = useRef()
 
   useFrame((_, delta) => {
-    if (ref.current) {
-      ref.current.rotation.y += spinDir * delta * 30
-    }
+    if (ref.current) ref.current.rotation.y += spinDir * delta * 35
   })
 
   return (
     <group position={position}>
       {/* Motor housing */}
       <mesh>
-        <cylinderGeometry args={[0.06, 0.06, 0.06, 8]} />
-        <meshStandardMaterial color="#333" metalness={0.8} roughness={0.2} />
+        <cylinderGeometry args={[0.07, 0.07, 0.07, 12]} />
+        <meshStandardMaterial color="#e8e8e8" metalness={0.9} roughness={0.1} />
       </mesh>
       {/* Propeller blades */}
-      <group ref={ref} position={[0, 0.05, 0]}>
-        <mesh rotation={[0, 0, 0]}>
-          <boxGeometry args={[0.5, 0.015, 0.08]} />
-          <meshStandardMaterial color="#1a1a2e" metalness={0.3} roughness={0.5} />
+      <group ref={ref} position={[0, 0.06, 0]}>
+        <mesh>
+          <boxGeometry args={[0.55, 0.012, 0.1]} />
+          <meshStandardMaterial color="#ff6b00" metalness={0.2} roughness={0.4} />
         </mesh>
         <mesh rotation={[0, Math.PI / 2, 0]}>
-          <boxGeometry args={[0.5, 0.015, 0.08]} />
-          <meshStandardMaterial color="#1a1a2e" metalness={0.3} roughness={0.5} />
+          <boxGeometry args={[0.55, 0.012, 0.1]} />
+          <meshStandardMaterial color="#ff6b00" metalness={0.2} roughness={0.4} />
         </mesh>
       </group>
     </group>
@@ -56,112 +52,114 @@ export default function Drone() {
   useFrame(() => {
     if (!droneRef.current) return
 
-    // Map gyro to drone orientation
-    // beta  (-90 to 90)  → pitch (tilt fwd/back) → X rotation + Z position
-    // gamma (-90 to 90)  → roll  (tilt left/right) → Z rotation + X position
-    // alpha (0 to 360)   → yaw   (compass heading) → Y rotation
     const pitch = (orientation.beta ?? 0) * DEG2RAD * 0.5
     const roll = (orientation.gamma ?? 0) * DEG2RAD * 0.5
     const yaw = (orientation.alpha ?? 0) * DEG2RAD
 
     targetRotation.current.set(pitch, yaw, -roll)
-
-    // Translate drone based on tilt (tilt forward = fly forward)
     targetPosition.current.x = (orientation.gamma ?? 0) * 0.03
     targetPosition.current.z = (orientation.beta ?? 0) * 0.03
 
-    // Smooth interpolation (lerp)
-    droneRef.current.rotation.x = THREE.MathUtils.lerp(
-      droneRef.current.rotation.x,
-      targetRotation.current.x,
-      0.08
-    )
-    droneRef.current.rotation.y = THREE.MathUtils.lerp(
-      droneRef.current.rotation.y,
-      targetRotation.current.y,
-      0.04
-    )
-    droneRef.current.rotation.z = THREE.MathUtils.lerp(
-      droneRef.current.rotation.z,
-      targetRotation.current.z,
-      0.08
-    )
-    droneRef.current.position.x = THREE.MathUtils.lerp(
-      droneRef.current.position.x,
-      targetPosition.current.x,
-      0.05
-    )
-    droneRef.current.position.z = THREE.MathUtils.lerp(
-      droneRef.current.position.z,
-      targetPosition.current.z,
-      0.05
-    )
-
-    // Hover bob animation
-    droneRef.current.position.y =
-      Math.sin(Date.now() * 0.001) * 0.08
+    droneRef.current.rotation.x = THREE.MathUtils.lerp(droneRef.current.rotation.x, targetRotation.current.x, 0.08)
+    droneRef.current.rotation.y = THREE.MathUtils.lerp(droneRef.current.rotation.y, targetRotation.current.y, 0.04)
+    droneRef.current.rotation.z = THREE.MathUtils.lerp(droneRef.current.rotation.z, targetRotation.current.z, 0.08)
+    droneRef.current.position.x = THREE.MathUtils.lerp(droneRef.current.position.x, targetPosition.current.x, 0.05)
+    droneRef.current.position.z = THREE.MathUtils.lerp(droneRef.current.position.z, targetPosition.current.z, 0.05)
+    droneRef.current.position.y = Math.sin(Date.now() * 0.001) * 0.1
   })
 
   return (
     <group ref={droneRef}>
-      {/* Body */}
-      <mesh>
-        <boxGeometry args={[0.4, 0.12, 0.4]} />
-        <meshStandardMaterial color="#1e1e2e" metalness={0.6} roughness={0.3} />
+      {/* Main body — bright silver */}
+      <mesh castShadow>
+        <boxGeometry args={[0.5, 0.14, 0.5]} />
+        <meshStandardMaterial color="#d0d0d0" metalness={0.8} roughness={0.2} />
       </mesh>
 
-      {/* Top dome */}
-      <mesh position={[0, 0.1, 0]}>
+      {/* Top shell — orange accent */}
+      <mesh position={[0, 0.1, 0]} castShadow>
+        <boxGeometry args={[0.45, 0.06, 0.45]} />
+        <meshStandardMaterial color="#ff6b00" metalness={0.5} roughness={0.3} />
+      </mesh>
+
+      {/* Top dome — dark tinted */}
+      <mesh position={[0, 0.16, 0]}>
         <sphereGeometry args={[0.18, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshStandardMaterial color="#7c3aed" metalness={0.4} roughness={0.3} transparent opacity={0.85} />
+        <meshStandardMaterial color="#1a1a2e" metalness={0.3} roughness={0.1} transparent opacity={0.9} />
       </mesh>
 
-      {/* Camera pod */}
-      <mesh position={[0, -0.1, -0.15]}>
-        <sphereGeometry args={[0.06, 8, 8]} />
-        <meshStandardMaterial color="#111" metalness={0.9} roughness={0.1} />
+      {/* Center stripe */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[0.52, 0.03, 0.52]} />
+        <meshStandardMaterial color="#ff6b00" emissive="#ff6b00" emissiveIntensity={1.5} />
       </mesh>
 
-      {/* LED strip glow */}
-      <mesh position={[0, -0.06, 0]}>
-        <boxGeometry args={[0.42, 0.02, 0.42]} />
-        <meshStandardMaterial color="#7c3aed" emissive="#7c3aed" emissiveIntensity={2} />
+      {/* Camera gimbal */}
+      <mesh position={[0, -0.1, -0.18]} castShadow>
+        <sphereGeometry args={[0.07, 12, 12]} />
+        <meshStandardMaterial color="#222" metalness={0.95} roughness={0.05} />
+      </mesh>
+      {/* Camera lens */}
+      <mesh position={[0, -0.1, -0.25]}>
+        <cylinderGeometry args={[0.03, 0.03, 0.04, 12]} rotation={[Math.PI / 2, 0, 0]} />
+        <meshStandardMaterial color="#0a0a0f" metalness={1} roughness={0} />
       </mesh>
 
-      {/* Arms */}
+      {/* Bottom plate */}
+      <mesh position={[0, -0.08, 0]}>
+        <boxGeometry args={[0.48, 0.02, 0.48]} />
+        <meshStandardMaterial color="#aaaaaa" metalness={0.7} roughness={0.3} />
+      </mesh>
+
+      {/* Arms — 4 diagonal */}
       {ARM_POSITIONS.map((pos, i) => (
         <group key={i}>
-          {/* Diagonal arm */}
           <mesh
             position={[pos[0] * 0.5, 0, pos[2] * 0.5]}
             rotation={[0, Math.atan2(pos[0], pos[2]), 0]}
+            castShadow
           >
-            <boxGeometry args={[0.08, 0.04, 0.7]} />
-            <meshStandardMaterial color="#2a2a3e" metalness={0.5} roughness={0.4} />
+            <boxGeometry args={[0.09, 0.045, 0.8]} />
+            <meshStandardMaterial color="#cccccc" metalness={0.7} roughness={0.3} />
           </mesh>
-          {/* Propeller at arm end */}
+          {/* Orange accent band on arm */}
+          <mesh
+            position={[pos[0] * 0.5, 0.025, pos[2] * 0.5]}
+            rotation={[0, Math.atan2(pos[0], pos[2]), 0]}
+          >
+            <boxGeometry args={[0.091, 0.01, 0.25]} />
+            <meshStandardMaterial color="#ff6b00" emissive="#ff6b00" emissiveIntensity={0.8} />
+          </mesh>
           <Propeller position={pos} spinDir={SPIN_DIRS[i]} />
         </group>
       ))}
 
-      {/* Front indicator lights */}
-      <mesh position={[0.05, 0, -0.22]}>
+      {/* Landing gear — 4 legs */}
+      {[[-0.2, 0.2], [0.2, 0.2], [-0.2, -0.2], [0.2, -0.2]].map(([x, z], i) => (
+        <mesh key={i} position={[x, -0.2, z]}>
+          <cylinderGeometry args={[0.015, 0.015, 0.2, 6]} />
+          <meshStandardMaterial color="#888" metalness={0.6} roughness={0.4} />
+        </mesh>
+      ))}
+
+      {/* Front LEDs — green */}
+      <mesh position={[0.06, 0, -0.26]}>
         <sphereGeometry args={[0.025, 8, 8]} />
-        <meshStandardMaterial color="#00ff88" emissive="#00ff88" emissiveIntensity={3} />
+        <meshStandardMaterial color="#00ff88" emissive="#00ff88" emissiveIntensity={4} />
       </mesh>
-      <mesh position={[-0.05, 0, -0.22]}>
+      <mesh position={[-0.06, 0, -0.26]}>
         <sphereGeometry args={[0.025, 8, 8]} />
-        <meshStandardMaterial color="#00ff88" emissive="#00ff88" emissiveIntensity={3} />
+        <meshStandardMaterial color="#00ff88" emissive="#00ff88" emissiveIntensity={4} />
       </mesh>
 
-      {/* Rear indicator lights */}
-      <mesh position={[0.05, 0, 0.22]}>
+      {/* Rear LEDs — red */}
+      <mesh position={[0.06, 0, 0.26]}>
         <sphereGeometry args={[0.025, 8, 8]} />
-        <meshStandardMaterial color="#ff3333" emissive="#ff3333" emissiveIntensity={3} />
+        <meshStandardMaterial color="#ff2222" emissive="#ff2222" emissiveIntensity={4} />
       </mesh>
-      <mesh position={[-0.05, 0, 0.22]}>
+      <mesh position={[-0.06, 0, 0.26]}>
         <sphereGeometry args={[0.025, 8, 8]} />
-        <meshStandardMaterial color="#ff3333" emissive="#ff3333" emissiveIntensity={3} />
+        <meshStandardMaterial color="#ff2222" emissive="#ff2222" emissiveIntensity={4} />
       </mesh>
     </group>
   )
