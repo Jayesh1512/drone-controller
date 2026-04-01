@@ -111,17 +111,32 @@ export default function HeroBuilding() {
         </mesh>
       ))}
 
-      {/* Roof platform */}
+      {/* Roof platform — dark concrete, no glow */}
       <mesh position={[0, H + 0.65, 0]}>
         <boxGeometry args={[4.1, 0.5, 4.1]} />
-        <meshLambertMaterial color="#201a10" flatShading />
+        <meshLambertMaterial color="#2a2520" flatShading />
       </mesh>
 
-      {/* Roof glow strip — warm */}
+      {/* Roof surface — flat dark gravel */}
       <mesh position={[0, H + 0.92, 0]}>
-        <boxGeometry args={[4.2, 0.08, 4.2]} />
-        <meshStandardMaterial color="#c8860a" emissive="#c8760a" emissiveIntensity={2.5} />
+        <boxGeometry args={[4.0, 0.06, 4.0]} />
+        <meshLambertMaterial color="#1e1c18" flatShading />
       </mesh>
+
+      {/* Small roof corner lights */}
+      {[[-1.7, 1.7], [1.7, 1.7], [-1.7, -1.7], [1.7, -1.7]].map(([x, z], i) => (
+        <group key={i} position={[x, H + 1.05, z]}>
+          <mesh>
+            <cylinderGeometry args={[0.06, 0.07, 0.15, 6]} />
+            <meshLambertMaterial color="#3a3530" flatShading />
+          </mesh>
+          <mesh position={[0, 0.12, 0]}>
+            <sphereGeometry args={[0.06, 6, 4]} />
+            <meshStandardMaterial color="#f5e6a0" emissive="#f5d060" emissiveIntensity={2} />
+          </mesh>
+          <pointLight position={[0, 0.12, 0]} color="#e8c840" intensity={0.8} distance={3} />
+        </group>
+      ))}
 
       {/* Antenna */}
       <mesh position={[0, H + 2.4, 0]}>
