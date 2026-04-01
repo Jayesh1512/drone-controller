@@ -58,7 +58,7 @@ export default function Desktop() {
     <div className="w-screen h-screen bg-[#0e0b08] relative overflow-hidden">
       {/* 3D Scene */}
       <Canvas
-        camera={{ position: [0, 3, 16], fov: 60 }}
+        camera={{ position: [0, 12, 22], fov: 60 }}
         shadows
         style={{ width: '100%', height: '100%' }}
         gl={{ antialias: true }}
