@@ -1,10 +1,12 @@
 import { useEffect, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Grid, Stars, ContactShadows } from '@react-three/drei'
+import { Stars } from '@react-three/drei'
 import { QRCodeSVG } from 'qrcode.react'
 import { useDroneStore } from '../store/droneStore'
 import { useAblySubscribe } from '../hooks/useAbly'
-import Drone from '../components/Drone'
+import City from '../components/City'
+import HeroBuilding from '../components/HeroBuilding'
+import Player from '../components/Player'
 
 function generateRoomId() {
   return Math.random().toString(36).slice(2, 8).toUpperCase()
@@ -13,53 +15,26 @@ function generateRoomId() {
 function Scene() {
   return (
     <>
-      <color attach="background" args={['#0d0d1a']} />
-      <fog attach="fog" args={['#0d0d1a', 10, 40]} />
+      <color attach="background" args={['#0e0b08']} />
+      <fog attach="fog" args={['#0e0b08', 18, 55]} />
 
-      {/* Key light — warm white from above-front */}
-      <directionalLight position={[3, 6, 4]} intensity={3} color="#ffffff" castShadow />
-      {/* Fill light — cool blue from side */}
-      <directionalLight position={[-4, 2, -2]} intensity={1.5} color="#88aaff" />
-      {/* Rim light — orange from behind */}
-      <directionalLight position={[0, -1, -5]} intensity={1.2} color="#ff6b00" />
-      {/* Ambient — enough to see dark areas */}
-      <ambientLight intensity={0.8} color="#334466" />
-      {/* Under-glow orange point */}
-      <pointLight position={[0, -0.5, 0]} color="#ff6b00" intensity={3} distance={4} />
-
-      <Stars radius={100} depth={60} count={4000} factor={3} fade speed={0.5} />
-
-      <Grid
-        position={[0, -2, 0]}
-        args={[30, 30]}
-        cellColor="#ff6b00"
-        sectionColor="#662200"
-        fadeDistance={20}
-        cellSize={0.6}
-        sectionSize={3}
-        cellThickness={0.5}
-        sectionThickness={1.2}
+      {/* Moonlight — cool white from high above */}
+      <directionalLight position={[-8, 20, -10]} intensity={1.2} color="#d0c8b8" castShadow
+        shadow-mapSize-width={1024} shadow-mapSize-height={1024}
+        shadow-camera-far={80} shadow-camera-left={-30} shadow-camera-right={30}
+        shadow-camera-top={30} shadow-camera-bottom={-30}
       />
+      {/* Warm fill from low angle */}
+      <directionalLight position={[6, 2, 8]} intensity={0.5} color="#c8a060" />
+      {/* Low ambient — dark, moody */}
+      <ambientLight intensity={0.25} color="#3a3020" />
 
-      <ContactShadows
-        position={[0, -1.8, 0]}
-        opacity={0.6}
-        scale={6}
-        blur={2}
-        far={3}
-        color="#ff6b00"
-      />
+      {/* Stars — sparse, like a hazy night */}
+      <Stars radius={100} depth={50} count={1500} factor={2} fade speed={0.2} />
 
-      <Drone />
-
-      <OrbitControls
-        enablePan={false}
-        minDistance={2}
-        maxDistance={10}
-        maxPolarAngle={Math.PI / 1.8}
-        autoRotate
-        autoRotateSpeed={0.4}
-      />
+      <City />
+      <HeroBuilding />
+      <Player />
     </>
   )
 }
@@ -67,9 +42,7 @@ function Scene() {
 export default function Desktop() {
   const { roomId, setRoomId, setOrientation, connected, setConnected } = useDroneStore()
 
-  useEffect(() => {
-    setRoomId(generateRoomId())
-  }, [])
+  useEffect(() => { setRoomId(generateRoomId()) }, [])
 
   const controlUrl = useMemo(() => {
     if (!roomId) return null
@@ -82,59 +55,77 @@ export default function Desktop() {
   })
 
   return (
-    <div className="w-screen h-screen bg-[#0d0d1a] relative">
+    <div className="w-screen h-screen bg-[#0e0b08] relative overflow-hidden">
+      {/* 3D Scene */}
       <Canvas
-        camera={{ position: [0, 1.5, 4], fov: 55 }}
+        camera={{ position: [0, 3, 16], fov: 60 }}
         shadows
         style={{ width: '100%', height: '100%' }}
+        gl={{ antialias: true }}
       >
         <Scene />
       </Canvas>
 
+      {/* Film grain overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
+          opacity: 0.04,
+          mixBlendMode: 'overlay',
+        }}
+      />
+
+      {/* Vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.7) 100%)' }}
+      />
+
       {/* HUD */}
       <div className="absolute inset-0 pointer-events-none">
 
-        {/* Top center status */}
-        <div className="absolute top-5 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/40 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
-          <div className={`w-2 h-2 rounded-full ${connected ? 'bg-emerald-400' : 'bg-orange-500'} animate-pulse`} />
-          <span className="text-white/80 text-xs font-mono tracking-widest uppercase">
-            {connected ? 'Controller Connected' : 'Waiting for Controller'}
+        {/* Top center — connection status */}
+        <div className="absolute top-5 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 border border-[#c8860a]/20 rounded px-4 py-1.5">
+          <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-[#c8860a]' : 'bg-[#664400]'}`} />
+          <span className="text-[#c8860a]/70 text-[10px] font-mono tracking-[0.2em] uppercase">
+            {connected ? 'Gyro Connected' : 'No Controller'}
           </span>
         </div>
 
-        {/* Top left — room */}
-        <div className="absolute top-5 left-5 font-mono text-[11px] text-orange-400/60 tracking-widest">
-          ROOM · {roomId}
+        {/* Top left */}
+        <div className="absolute top-5 left-5">
+          <p className="text-[#c8860a]/40 text-[9px] font-mono tracking-[0.25em] uppercase">Room · {roomId}</p>
         </div>
 
-        {/* Top right — title */}
-        <div className="absolute top-5 right-5 text-right">
-          <p className="text-white font-bold text-lg tracking-tight leading-none">DRONE</p>
-          <p className="text-orange-400 text-[10px] font-mono tracking-widest">CONTROLLER</p>
+        {/* Bottom left — controls hint */}
+        <div className="absolute bottom-6 left-6 text-[#c8860a]/40 text-[10px] font-mono space-y-1">
+          <p>↑ ↓ ← →  fly</p>
+          <p>gyro · axes</p>
         </div>
 
         {/* QR panel — bottom right */}
-        <div className="absolute bottom-6 right-6 pointer-events-auto flex flex-col items-center gap-2 bg-black/50 backdrop-blur-md border border-orange-500/20 rounded-2xl p-4 shadow-[0_0_30px_rgba(255,107,0,0.15)]">
-          <p className="text-orange-400/70 text-[10px] font-mono uppercase tracking-widest">Scan to Control</p>
+        <div className="absolute bottom-6 right-6 pointer-events-auto flex flex-col items-center gap-2 bg-black/60 border border-[#c8860a]/20 rounded p-3">
+          <p className="text-[#c8860a]/50 text-[9px] font-mono uppercase tracking-[0.2em]">Scan · Control</p>
           {controlUrl && (
-            <div className="bg-white p-2 rounded-xl">
-              <QRCodeSVG value={controlUrl} size={130} />
+            <div className="bg-[#f5e6c8] p-1.5 rounded">
+              <QRCodeSVG value={controlUrl} size={110} bgColor="#f5e6c8" fgColor="#1a1208" />
             </div>
           )}
-          <p className="text-white/20 text-[9px] font-mono">{roomId}</p>
+          <p className="text-[#c8860a]/30 text-[8px] font-mono">{roomId}</p>
         </div>
 
-        {/* Corner brackets */}
+        {/* Corner marks */}
         {[
-          'top-3 left-3 border-t-2 border-l-2 rounded-tl',
-          'top-3 right-3 border-t-2 border-r-2 rounded-tr',
-          'bottom-3 left-3 border-b-2 border-l-2 rounded-bl',
-          'bottom-3 right-3 border-b-2 border-r-2 rounded-br',
+          'top-3 left-3 border-t border-l',
+          'top-3 right-3 border-t border-r',
+          'bottom-3 left-3 border-b border-l',
+          'bottom-3 right-3 border-b border-r',
         ].map((cls, i) => (
-          <div key={i} className={`absolute w-5 h-5 border-orange-500/40 ${cls}`} />
+          <div key={i} className={`absolute w-4 h-4 border-[#c8860a]/30 ${cls}`} />
         ))}
 
-        {/* Gyro readout — bottom left (shows when connected) */}
+        {/* Gyro readout */}
         {connected && <GyroHUD />}
       </div>
     </div>
@@ -142,17 +133,13 @@ export default function Desktop() {
 }
 
 function GyroHUD() {
-  const orientation = useDroneStore((s) => s.orientation)
+  const o = useDroneStore((s) => s.orientation)
   return (
-    <div className="absolute bottom-6 left-6 font-mono text-[11px] flex flex-col gap-1 bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-3">
-      {[
-        { label: 'YAW', value: orientation.alpha, color: 'text-sky-400' },
-        { label: 'PITCH', value: orientation.beta, color: 'text-emerald-400' },
-        { label: 'ROLL', value: orientation.gamma, color: 'text-orange-400' },
-      ].map(({ label, value, color }) => (
-        <div key={label} className="flex items-center gap-3">
-          <span className="text-white/30 w-10">{label}</span>
-          <span className={`${color} w-16 text-right`}>{(value ?? 0).toFixed(1)}°</span>
+    <div className="absolute bottom-6 left-24 font-mono text-[9px] flex flex-col gap-0.5 text-[#c8860a]/50">
+      {[['Y', o.alpha], ['P', o.beta], ['R', o.gamma]].map(([l, v]) => (
+        <div key={l} className="flex gap-2">
+          <span>{l}</span>
+          <span className="w-12 text-right text-[#c8860a]/70">{(v ?? 0).toFixed(1)}°</span>
         </div>
       ))}
     </div>
