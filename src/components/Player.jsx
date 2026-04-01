@@ -146,6 +146,12 @@ export default function Player() {
             <cylinderGeometry args={[0.07, 0.07, 0.07, 6]} />
             <meshLambertMaterial color="#888880" flatShading />
           </mesh>
+          {/* Wing tip light — off white glow */}
+          <mesh position={[pos[0], pos[1] - 0.05, pos[2]]}>
+            <sphereGeometry args={[0.03, 6, 4]} />
+            <meshStandardMaterial color="#f0ede8" emissive="#f0ede8" emissiveIntensity={2.5} />
+          </mesh>
+          <pointLight position={[pos[0], pos[1] - 0.05, pos[2]]} color="#f0ede8" intensity={0.4} distance={1.2} />
           {/* Prop */}
           <group ref={(el) => (propRefs.current[i] = el)} position={[pos[0], pos[1] + 0.06, pos[2]]}>
             <mesh>
