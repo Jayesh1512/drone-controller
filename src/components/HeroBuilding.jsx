@@ -2,6 +2,34 @@ import { useRef, Suspense } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Text3D, Center } from '@react-three/drei'
 
+function HelipadLight({ position, offset = 0 }) {
+  const meshRef = useRef()
+  const lightRef = useRef()
+
+  useFrame(({ clock }) => {
+    // Slow flash — 1.5s cycle, offset so they don't all flash together
+    const t = (clock.elapsedTime + offset) % 1.5
+    const on = t < 0.15 // brief flash, then dark
+    const intensity = on ? 1 : 0
+    if (meshRef.current) meshRef.current.material.emissiveIntensity = on ? 3 : 0.05
+    if (lightRef.current) lightRef.current.intensity = intensity * 2
+  })
+
+  return (
+    <group position={position}>
+      <mesh>
+        <cylinderGeometry args={[0.06, 0.07, 0.15, 6]} />
+        <meshLambertMaterial color="#3a3530" flatShading />
+      </mesh>
+      <mesh ref={meshRef} position={[0, 0.12, 0]}>
+        <sphereGeometry args={[0.06, 6, 4]} />
+        <meshStandardMaterial color="#ff4422" emissive="#ff2200" emissiveIntensity={0.05} />
+      </mesh>
+      <pointLight ref={lightRef} position={[0, 0.12, 0]} color="#ff2200" intensity={0} distance={3} />
+    </group>
+  )
+}
+
 function GlowingLetters() {
   return (
     <group position={[0, 0.3, 0]}>
@@ -114,19 +142,9 @@ export default function HeroBuilding() {
         <meshLambertMaterial color="#1e1c18" flatShading />
       </mesh>
 
-      {/* Small roof corner lights */}
+      {/* Helipad corner lights — staggered flash */}
       {[[-1.7, 1.7], [1.7, 1.7], [-1.7, -1.7], [1.7, -1.7]].map(([x, z], i) => (
-        <group key={i} position={[x, H + 1.05, z]}>
-          <mesh>
-            <cylinderGeometry args={[0.06, 0.07, 0.15, 6]} />
-            <meshLambertMaterial color="#3a3530" flatShading />
-          </mesh>
-          <mesh position={[0, 0.12, 0]}>
-            <sphereGeometry args={[0.06, 6, 4]} />
-            <meshStandardMaterial color="#ff4422" emissive="#ff2200" emissiveIntensity={2} />
-          </mesh>
-          <pointLight position={[0, 0.12, 0]} color="#ff2200" intensity={0.8} distance={3} />
-        </group>
+        <HelipadLight key={i} position={[x, H + 1.05, z]} offset={i * 0.375} />
       ))}
 
       {/* Antenna */}
