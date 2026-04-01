@@ -132,9 +132,9 @@ export default function HeroBuilding() {
           </mesh>
           <mesh position={[0, 0.12, 0]}>
             <sphereGeometry args={[0.06, 6, 4]} />
-            <meshStandardMaterial color="#f5e6a0" emissive="#f5d060" emissiveIntensity={2} />
+            <meshStandardMaterial color="#ff4422" emissive="#ff2200" emissiveIntensity={2} />
           </mesh>
-          <pointLight position={[0, 0.12, 0]} color="#e8c840" intensity={0.8} distance={3} />
+          <pointLight position={[0, 0.12, 0]} color="#ff2200" intensity={0.8} distance={3} />
         </group>
       ))}
 

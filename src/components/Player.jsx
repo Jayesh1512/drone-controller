@@ -14,7 +14,7 @@ export default function Player() {
   const { camera } = useThree()
   const orientation = useDroneStore((s) => s.orientation)
 
-  const posRef = useRef(new THREE.Vector3(0, 20, 20))
+  const posRef = useRef(new THREE.Vector3(0, 12, 20))
   const yawRef = useRef(0)        // horizontal facing angle
   const keys = useRef({})
   const droneRef = useRef()
@@ -69,7 +69,7 @@ export default function Player() {
     posRef.current.z = THREE.MathUtils.clamp(posRef.current.z, -BOUNDS, BOUNDS)
 
     // Hover bob
-    posRef.current.y = 20 + Math.sin(Date.now() * 0.001) * 0.08
+    posRef.current.y = 12 + Math.sin(Date.now() * 0.001) * 0.08
 
     // --- Drone mesh ---
     if (droneRef.current) {
